@@ -1,0 +1,533 @@
+\documentclass[a4paper]{article}
+
+% Linguistic and standard settings
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[italian, english]{babel}
+
+\usepackage{comment} 		% Use comment env
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumitem}
+\usepackage[a4paper,width=160mm,top=25mm,bottom=25mm,bindingoffset=6mm]{geometry}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usepackage{etoolbox}
+\usepackage{nameref}
+\usepackage{hyperref} 		% Clickable refs
+\usepackage{todonotes}
+
+% tikz stuff
+
+
+% Bibliography
+\usepackage[autostyle]{csquotes}
+\usepackage[style=alphabetic, backend=biber, citestyle=alphabetic]{biblatex}
+\addbibresource{references.bib}
+
+
+% Number sets
+\newcommand{\N}{ \mathbb{N} }
+\newcommand{\Z}{ \mathbb{Z} }
+\newcommand{\Q}{ \mathbb{Q} }
+
+% Categories
+\newcommand{\catname}[1]{{\normalfont\textbf{#1}}}
+\newcommand{\C}{\mathcal{C}}
+\newcommand{\Cop}{\C^{\textrm{op}}}
+\newcommand{\CC}{\textrm{C}(\C)}
+\newcommand{\DC}{\textrm{C}^2(\C)}
+\newcommand{\Hs}{ H_{\star} }
+\newcommand{\Hhs}{ H'_{\star} }
+\newcommand{\Set}{\catname{Set}}
+\newcommand{\Mod}{\catname{Mod}}
+\newcommand{\Ab}{\catname{Ab}}
+\newcommand{\Grp}{\catname{Grp}}
+\newcommand{\Ob}{\textrm{Ob}}
+\newcommand{\Mor}{\textrm{Mor}}
+\newcommand{\tot}{\textrm{Tot}}
+\newcommand{\plim}{ \varprojlim }
+\newcommand{\ilim}{ \varinjlim }
+\newcommand{\Ii}[1]{\prescript{I}{}{#1}}
+\newcommand{\IIi}[1]{\prescript{II}{}{#1}}
+
+% Chain complexes
+\newcommand{\bb}{\bullet\bullet}
+
+% im and coker
+\DeclareMathOperator{\coker}{coker}
+\DeclareMathOperator{\Ima}{im}			% Write Im of a function in math mode
+
+% Restriction of function
+\newcommand\restr[2]{{% we make the whole thing an ordinary symbol
+		\left.\kern-\nulldelimiterspace % automatically resize the bar with \right
+		#1 % the function
+		\vphantom{\big|} % pretend it's a little taller at normal size
+		\right|_{#2} % this is the delimiter
+}}
+
+% Rotate tilde in tikz-cd vertical arrows
+\tikzset{
+	tildebassa/.style={anchor=south, rotate=90, inner sep=.5mm}
+}
+
+% Theorems and stuff
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lemma}[thm]{Lemma}
+\newtheorem{corollary}{Corollary}[thm]
+
+
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{example}[thm]{Example}
+\newtheorem{remark}{Remark}[thm]
+
+% Author and title
+\author{Carlo Buccisano}
+\title{An introduction to spectral sequences}
+
+\begin{document}
+	\maketitle
+	\tableofcontents
+	
+	\section{Preliminaries}
+		We'll denote with $\C$ a $\mathcal{U}$-small categories, for some Grothendieck universe $\mathcal{U}$. For our purpose, we'll need an abelian category $\C$ which respects the following Grothendieck axioms (and their dual versions, i.e.\ substitute coproduct with product and mono with epi):
+		\begin{description}
+			\item[AB3] For every (small) indexed family $(A_i)_{i \in I} \subset \Ob(\C)$, the coproduct $\coprod_i A_i$ exists, i.e.\ $\C$ is cocomplete.
+			\item[AB4] $\C$ satisfies AB3 and the coproduct of a family of mono is mono.
+		\end{description}
+		For the sake of simplicity, we'll use the Freyd-Mitchell embedding of $\C$ in a full subcategory of $\Mod(A)$ for some ring $A$.
+		Similar to the notation used in \cite{weibel}, we'll adopt left arrows for chain complexes: let $\Omega \in \CC$, then
+		\begin{center}\begin{tikzcd}[column sep = huge]
+			\dots & \arrow[l] \Omega_{n-1} & \arrow[l,"d_n" above] \Omega_n & \arrow[l, "d_{n+1}" above] \Omega_{n+1} & \arrow[l] \dots
+		\end{tikzcd}\end{center}
+		which is the same as adopting the right-arrows notation and working in $\Cop$.
+		For double chain complexes, we'll use left and downward arrows, i.e.\ let $E \in \DC$, then\\
+		\begin{center}
+			\begin{tikzcd}[row sep = large, column sep = huge]
+					   & \vdots \arrow{d} 	   & \vdots \arrow{d} 				 & \vdots \arrow{d} 				   & 				 \\
+				\dots  & \arrow{l} E_{p-1,q+1} \arrow{d}{d'_{p-1, q+1}} & \arrow{l}{d_{p, q+1}} E_{p,q+1} \arrow{d}{d'_{p, q+1}} & \arrow{l}{d_{p+1, q+1}} E_{p+1,q+1} \arrow{d}{d'_{p+1, q+1}} & \arrow{l} \dots \\
+				\dots  & \arrow{l} E_{p-1,q} \arrow{d}{d'_{p-1, q}} & \arrow{l}{d_{p, q}} E_{p,q} \arrow{d}{d'_{p, q}} & \arrow{l}{d_{p+1, q}} E_{p+1,q} \arrow{d}{d'_{p+1, q}}	   & \arrow{l} \dots \\
+				\dots  & \arrow{l} E_{p-1,q-1} \arrow{d} & \arrow{l}{d_{p, q-1}} E_{p,q-1} \arrow{d} & \arrow{l}{d_{p+1, q-1}} E_{p+1,q-1} \arrow{d} & \arrow{l} \dots \\
+					   & \vdots 	   & \vdots 			 & \vdots  				   & 				 
+			\end{tikzcd}
+		\end{center}
+		We ask for the squares of a double chain complex to be anti-commutative, that is, we must have $d'\circ d + d \circ d' = 0$. We recall that there are two different definitions of total complexes, $\tot^{\coprod}(E)$ and $\tot^{\oplus}(E)$, defined by
+		\begin{gather*}
+			\tot^{\coprod}(E)_n = \coprod_{p+q = n} E_{p,q}, \quad \tot^{\oplus}(E)_n = \bigoplus_{p+q = n} E_{p,q} \\
+			\restr{d^{\coprod}_n}{E_{p,q}} = d_{p,q} + d'_{p,q}, \qquad \restr{d^{\oplus}_n}{E_{p,q}} = d_{p,q} + d'_{p,q}
+		\end{gather*}
+		which coincides if $E$ is such that, for any $n$, we have only a finite number of non-zero terms along the anti-diagonal $p+q = n$.
+	\section{Terminology}
+		\begin{defn}
+			A \emph{homology spectral sequence} in $\C$ is the following data:
+			\begin{enumerate}
+				\item A family $\{E^r_{p,q}\} \subset \C$ defined for all integers $p, q$ and $r \geq a$, for some $a \in \Z$;
+				\item Differentials $d^r_{p,q}\colon E^r_{p,q} \to E^r_{p-r, q+r-1}$ such that $d^r\circ d^r = 0$, which corresponds to chain complexes of slope $-(r+1)/r$ in the lattice $E^r_{\bb}$.
+				\item Isomorphisms between $E^{r+1}_{p,q}$ and the homology of $E^r_{\bb}$ at $(p,q)$, i.e.\ $E^{r+1}_{p,q} \cong \ker{d^r_{p,q}}/\Ima{d^r_{p+r, q-r+1}}$.
+			\end{enumerate}
+			The \emph{total degree} of $E^r_{p,q}$ is $p+q$ and each differential $d^r_{p,q}$ decreases the total degree by one. These objects form a category: a morphism $f\colon E \to E'$ is a family of maps $f_{p,q}^r\colon E^r_{p,q} \to E'^r_{p,q}$ in $\C$ with $d'^r\circ f^r = f^r \circ d^r$ and such that $f^{r+1}_{p,q}$ is the map induced by $f^r_{p,q}$ on homology.
+		\end{defn}
+		We can also define a cohomology spectral sequence, with differentials going ``to the right'', and we'll denote one by $\{E^{p,q}_r\}$. From now on, unless otherwise specified, we'll work with homology spectral sequences.
+		\begin{defn}[$E^{\infty}$ terms]
+			Let $\{E^r_{p,q}\}$ be a spectral sequence; each $E^{r+1}_{p,q}$ is a subquotient of $E^r_{p,q}$ and with an induction on $r$ we can prove there exists a nested family of subobjects in $E^a_{p,q}$
+			\[
+				0 = B^a_{p,q} \subseteq \dots \subseteq B^r_{p,q} \subseteq B^{r+1}_{p,q} \subseteq \dots \subseteq Z^{r+1}_{p,q} \subseteq Z^r_{p,q} \subseteq \dots \subseteq Z^a_{p,q} = E^a_{p,q}
+			\]
+			such that $E^r_{p,q} \cong Z^r_{p,q}/B^r_{p,q}$. We define
+			\[
+				B^{\infty}_{p,q} \coloneqq \bigcup_{r=a}^{\infty} B^r_{p,q}, \qquad Z^{\infty}_{p,q} \coloneqq \bigcap_{r=a}^{\infty} Z^r_{p,q}
+			\]
+			and set $E^{\infty}_{p,q} \coloneqq Z^{\infty}_{p,q}/B^{\infty}_{p,q}$.
+		\end{defn}
+		\begin{defn}
+			A spectral sequence is:
+			\begin{enumerate}
+				 \item \emph{Bounded} if for each $n \in \Z$ there are only finitely many nonzero terms of total degree $n$ in $E^a_{\bb}$ (and hence in each $E^r_{\bb}$ for $r \geq a$). In this case, for each $(p,q)$, there exists an $r_0$ such that $E^r_{p,q} = E^{r+1}_{p,q}$ for all $r \geq r_0$ and hence $E^{\infty}_{p,q}$ corresponds to this stable value.
+				\item \emph{Bounded below} if for each $n \in \Z$ there exists $s(n) \in \Z$ such that $E^a_{p, n-p} = 0$ for every $p < s(n)$.
+				\item \emph{Regular} if for each $(p, q)$ the differentials $d^r_{p,q}$ (i.e.\ leaving $E^r_{p,q}$) are zero for all large $r$. Equivalently, there exists $r = r(p,q) \in \Z$ such that $Z^{\infty}_{p,q} = Z^r_{p,q}$.
+			\end{enumerate}
+			It is easily seen that every property implies the ones below it.
+		\end{defn}
+		\begin{example}
+			A first quadrant spectral sequence is one where $E^r_{p,q} = 0$ unless $(p,q)$ belongs to the first quadrant. Clearly it is bounded.
+			A right half-plane spectral sequence, instead, is bounded below but not bounded.
+		\end{example}
+		\begin{defn}[Convergence]
+			\label{defn:convergence}
+			The spectral sequence $\{E^r_{p,q}\}$ \emph{weakly converges} to $H_{\star} = \{H_n\}_{n \in \N} \subset \C$ if for each $H_n$ we have a filtration (indexed in $\Z$)
+			\[
+				\dots \subseteq F_{p-1}H_n \subseteq F_pH_n \subseteq F_{p+1}H_n \subseteq \dots \subseteq H_n
+			\]
+			and isomorphisms $\beta_{p,q}\colon E^{\infty}_{p,q} \xrightarrow{\sim} F_pH_{p+q}/F_{p-1}H_{p+q}$ for every $(p,q)$. 
+			
+			We say that $E$ \emph{approaches} $H_{\star}$ if it weakly converges to it and every filtration is Hausdorff and exhaustive, i.e.\ $\cap F_pH_n = 0$ and $\cup F_pH_n = H_n$.
+			
+			Finally, we say that $E$ \emph{converges} to $H_{\star}$ if $E$ is regular, it approaches $H_{\star}$ and $H_{\star}$ is also complete, i.e.\ $H_n = \plim (H_n/F_pH_n)$. We'll denote convergence by
+			\[
+				E^a_{p,q} \Longrightarrow H_{p+q}.
+			\]
+		\end{defn}
+		\begin{example}
+			If a first quadrant spectral sequence converges to $\Hs$ then every $H_n$ has a finite filtration (sometimes called ``canonical filtration'')
+			\[
+				0 = F_{-1}H_n \subseteq F_0H_n \subseteq \dots \subseteq F_nH_n = H_n
+			\]
+			such that the bottom piece $F_0H_n = E^{\infty}_{0,n}$ is on the $y$-axis and the top piece $H_n/F_{n-1}H_n \cong E^{\infty}_{n,0}$ is on the $x$-axis. Since this is a first quadrant sequence, each $E^{\infty}_{0,n}$ is a quotient of $E^a_{0,n}$ and each $E^{\infty}_{n,0}$ is a subobject of $E^a_{n,0}$. Hence we have the edge morphisms
+			\[
+				E^a_{0,n} \to E^{\infty}_{0,n} \subseteq H_n, \qquad H_n \to E^{\infty}_{n,0} \subseteq E^a_{n,0}.
+			\]
+		\end{example}
+		\begin{defn}
+			A spectral sequence $E$ \emph{collapses} at $E^r$ ($r \geq 2$) if there is exactly one nonzero row/column in the lattice $E^r_{\bb}$. If $E$ converges to $H_{\star}$ then $H_n$ is the unique nonzero $E^r_{p,n-p}$. (The majority of applications of spectral sequences involve collapsing spectral sequences at $E^2$).
+		\end{defn}
+		\begin{lemma}[Mapping Lemma]
+			\label{mapping_lemma}
+			Let $f\colon E \to E'$ be a morphism of spectral sequences such that, for a certain $r$, $f^r\colon E^r \xrightarrow{\sim} E'^r$ is an iso. Then $f^s$ is an iso as well for every $s \geq r$. Also, the natural morphism $f^{\infty}\colon E^{\infty} \xrightarrow{\sim} E'^{\infty}$ is an iso.
+		\end{lemma}
+		\begin{proof}
+			The fact that $f^s$ is an iso can be proved by induction on $s$. It easily derives from the fact that if $f^{s-1}\colon E^{s-1} \xrightarrow{\sim} E'^{s-1}$ then it also the induces an iso between homologies, which then implies that $f^s$ is also an iso. To conclude that also $f^{\infty}$ is an iso we observe that
+			\[
+				Z^{\infty}/B^{\infty} = \plim Z^n/B^m = \plim Z^{\infty}/B^m = \plim Z^n/B^{\infty}
+			\]
+			and that we have a natural induced map $Z^{\infty}/B^{\infty} \to Z'^{\infty}/B'^{\infty}$ and we conclude using $AB4$.
+		\end{proof}
+		\begin{defn}[Compatible maps]
+			Let $E, E'$ be two spectral sequences weakly convergent to $H_{\star}$ and $H'_{\star}$ respectively. A map $h\colon \Hs \to H'_{\star}$ is \emph{compatible} with a morphism $f\colon E \to E'$ if $h$ maps $F_pH_n$ to $F_pH'_n$ and the following diagram commutes
+			\begin{center}
+				\begin{tikzcd}[row sep = large, column sep = large]
+					F_pH_n/F_{p-1}H_n \arrow{r}{h} & F_pH'_n/F_{p-1}H'_n \\
+					E^{\infty}_{p,q} \arrow[u, "\sim" tildebassa, "\beta_{p, q}" right] \arrow{r}{f^{\infty}_{p, q}}
+					 & E'^{\infty}_{p, q} \arrow[u,"\sim" tildebassa, "\beta'_{p, q}" right] 
+				\end{tikzcd}
+			\end{center}
+		\end{defn}
+		\begin{thm}[Comparison theorem]
+			Let $E, E'$ converge to $\Hs$ and $\Hhs$ and let $h\colon \Hs \to \Hhs$ be a compatible map with a morphism $f\colon E \to E'$. If $f^r\colon E^r \to E'^r$ is an iso for some $r$ then also $h$ is an isomorphism.
+		\end{thm}
+		\begin{proof}
+			By the \nameref{mapping_lemma} we know that also $f^r$ and $f^{\infty}$ are iso. Weak convergence gives us the following exact sequences
+			\begin{center}
+				\begin{tikzcd}
+					0 \arrow[r] & F_{p-1}H_n/F_sH_n \arrow[r] \arrow[d, "h" left] & F_pH_n/F_sH_n \arrow[r] \arrow[d, "h" left] & E^{\infty}_{p, n-p} \arrow[d, "\sim" tildebassa] \arrow[r] & 0 \\
+					0 \arrow[r] & F_{p-1}H'_n/F_sH'_n \arrow[r] & F_pH'_n/F_sH'_n \arrow[r] & E'^{\infty}_{p, n-p} \arrow[r] & 0 
+				\end{tikzcd}
+			\end{center}
+			Fixed $s$, an easy induction shows us that $F_pH_n/F_sH_n \cong F_pH'_n/F_sH'_n$ (use the 5-lemma) for any $p$. Since this filtration is exhaustive (by def of convergence) then we have $H_n/F_sH_n \cong H'_n/F_sH'_n$ for any $s$, and we conclude using completeness taking the projective limit of both members.
+		\end{proof}
+		\begin{remark}
+			The same spectral sequence can converge to many different $\Hs$. For example consider, in $\Ab$,  a first quadrant spectral sequence defined by
+			\begin{gather*}
+				E^0_{p,q} \coloneqq 
+				\begin{cases}
+					0, & \text{if $p < 0$ or $q < 0$}\\
+					\Z/2\Z & \text{otherwise}
+				\end{cases}
+			\end{gather*}
+			where the differentials are the zero morphisms. Then $E^{\infty} = E^0$ and a $H_3$ can be $\Z/16\Z$ or $\left(\Z/2\Z\right)^4$ or even $\Z/2\Z \oplus \Z/8\Z$.
+			The comparison theorem allows us to reconstruct $\Hs$ in a different way, having the right maps.
+		\end{remark}
+	\section{Spectral sequence of a filtration}
+		\begin{defn}
+			Denote by $C \in \CC$ a chain complex. A filtration on $C$ is a family of chain subcomplexes
+			\[
+				\dots \subseteq F_{p-1}C \subseteq F_pC \subseteq \dots \subseteq C.
+			\]
+		\end{defn}
+		Our goal is to show that we can associate a spectral sequence to any filtered complex.
+		\begin{defn}
+			A filtration on $C$ is called \emph{bounded} if for any $n$ there are integers $s < t$ such that $F_sC_n = 0$ and $F_tC_n = C_n$. If $s = -1$ and $t = n$ then the filtration if canonically bounded. If $s = -\infty$ ($t = +\infty$) then the filtration is bounded above (below).
+		\end{defn}
+		\begin{thm}[Construction of the spectral sequence]
+			\label{thm:spectral-seq-filtration}
+			A filtration $F$ on a chain complex $C$ naturally determines a spectral sequence starting with $E^0_{p,q} = F_pC_{p+q}/F_{p-1}C_{p+q}$ and $E^1_{p,q} = H_q(E^0_{p,\bullet})$.
+		\end{thm}
+		\begin{proof}
+			Let $\eta_{p,q}\colon F_pC_{p+q} \to F_pC_{p+q}/F_{p-1}C_{p+q} = E^0_{p,q}$ be the natural surjection.	Let's define the sets
+			\[
+				A^r_{p,q} \coloneqq \{c \in F_pC_{p+q} : d(c) \in F_{p-r}C_{p+q-1}\}
+			\]	
+			i.e.\ the elements of $F_pC_{p+q}$ that are cycles ``mod $F_{p-r}C_{p+q-1}$''. Let's immediately observe that we have the inclusions
+			\begin{gather}
+				\label{eq:inclusions-As}
+				\begin{tikzcd}[ampersand replacement = \&]
+					\dots \arrow[hookrightarrow]{r} \& A^{r+1}_{p,q} \arrow[hookrightarrow]{r} \arrow[hookrightarrow]{d} \& A^r_{p,q} \arrow[hookrightarrow]{r} \arrow[hookrightarrow]{d}\& A^{r-1}_{p,q} \arrow[hookrightarrow]{r} \arrow[hookrightarrow]{d} \& \dots \\
+					\dots \arrow[hookrightarrow]{r} \& A^{r+2}_{p+1,q-1} \arrow[hookrightarrow]{r} \& A^{r+1}_{p+1,q-1} \arrow[hookrightarrow]{r} \& A^{r}_{p+1,q-1} \arrow[hookrightarrow]{r} \& \dots \\
+				\end{tikzcd} \\
+				d(A^r_{p,q}) \subseteq A^s_{p-r, q+r-1} \quad \text{for any $s$.}
+			\end{gather}
+			Now let's define
+			\begin{gather*}
+				Z^r_{p,q} \coloneqq \eta_{p,q}(A^r_{p,q}) \subseteq E^0_{p,q}, \qquad B^r_{p,q} \coloneqq \eta_{p,q}(d(A^{r-1}_{p+r-1, q-r+2})) \subseteq E^0_{p,q}\\
+				Z^{\infty}_{p,q} \coloneqq \bigcap_{r=1}^{\infty} Z^r_{p,q}, \qquad B^{\infty}_{p,q} \coloneqq \bigcup_{r=1}^{\infty} B^r_{p,q}
+			\end{gather*}
+			so that we have the following inclusions in $E^0_{p,q}$
+			\[
+				0 = B^0_{p,q} \subseteq B^1_{p,q} \subseteq \dots \subseteq B^r_{p,q} \subseteq B^{\infty}_{p,q} \subseteq Z^{\infty}_{p,q} \subseteq \dots \subseteq Z^r_{p,q} \subseteq \dots \subseteq Z^1_{p,q} \subseteq Z^0_{p,q} = E^0_{p,q}.
+			\]
+			The inclusions $B^r_{p,q} \subseteq B^{r+1}_{p,q}$ and $Z^{r+1}_{p,q} \subseteq Z^r_{p,q}$ immediately comes from $(1)$ while $B^s_{p,q} \subseteq Z^r_{p,q}$ comes from $(2)$.
+			Let's now observe some other ``rules'' we'll use in all the following isomorphisms (together with the classical theorem $S+T/T \cong S/S\cap T)$ and some clever tricks):
+			\begin{gather}
+				\label{eqn:other-rules}
+				A^{r-1}_{p-1, q+1} = A^r_{p,q} \cap F_{p-1}C_{p+q}\\
+				A^r_{p-1, q+1} = A^{r+1}_{p,q} \cap A^{r-1}_{p-1, q+1}.				
+			\end{gather}
+			Let's now define the terms of the spectral sequence:
+			\begin{align*}
+				E^r_{p,q} \coloneqq \frac{Z^r_{p,q}}{B^r_{p,q}} &= \frac{A^r_{p,q}/A^{r}_{p,q} \cap F_{p-1}C_{p+q}}{d(A^{r-1}_{p+r-1, q-r+1})/d(A^{r-1}_{p+r-1, q-r+1}) \cap F_{p-1}C_{p+q}} \cong \\
+				& \cong \frac{A^r_{p,q} + d(A^{r-1}_{p+r-1, q-r+2}) + F_{p-1}C_{p+q}}{d(A^{r-1}_{p+r-1, q-r+2}) + F_{p-1}C_{p+q}} \cong \\
+				&\cong \frac{A^r_{p,q}}{A^{r-1}_{p-1,q+1} + d(A^{r-1}_{p+r-1, q-r+2})}.
+			\end{align*}
+			The differentials are the natural maps induced by the differential of the complex
+			\begin{center}
+				\begin{tikzcd}[row sep=large] 
+					E^r_{p,q} \arrow[r,"d^r_{p,q}"] & E^r_{p-r, q+r-1} \\
+					\frac{A^r_{p,q}}{A^{r-1}_{p-1,q+1} + d(A^{r-1}_{p+r-1, q-r+2})} \arrow[u, "\sim" tildebassa] \arrow[r, "d"] & \frac{A^r_{p-r,q+r-1}}{A^{r-1}_{p-r-1,q+r} + d(A^{r-1}_{p-1, q+1})} \arrow[u, "\sim" tildebassa]
+				\end{tikzcd}
+			\end{center}
+			which are well defined since $d(A^r_{p,q}) \subseteq A^r_{p-r, q+r-1}$. To conclude the proof we only need to give the isomorphisms between $E^{r+1}$ and $\Hs(E^r)$. First of all, let's prove that $d^r_{p,q}$ induces an iso
+			\[
+				Z^r_{p,q}/Z^{r+1}_{p,q} \xrightarrow{\sim} B^{r+1}_{p-r, q+r-1}/B^r_{p-r, q+r-1}.
+			\]
+			Let's note that $d(A^r_{p,q}) \cap F_{p-r-1}C_{p+q-1} = d(A^{r+1}_{p,q})$ and that $d(A^r_{p-1,q+1}) = d(A^{r+1}_{p,q}) \cap d(A^{r-1}_{p-1,q+1})$ (apply $d$ to $(4)$ and it's easy to show that it commutes with $\cap$). Using these facts together with classical isomorphism theorems and linearity of $d$ we can prove that
+			\begin{gather*}
+				B^r_{p-r,q+r-1} = \frac{d(A^{r-1}_{p-1,q+1})}{d(A^{r}_{p-1,q+1})} = \frac{d(A^{r-1}_{p-1,q+1})}{d(A^{r+1}_{p,q}) \cap d(A^{r-1}_{p-1,q+1})} \cong  \frac{d(A^{r-1}_{p-1,q+1} + A^{r+1}_{p,q})}{d(A^{r+1}_{p,q})} \\
+				\implies \frac{B^{r+1}_{p-r,q+r-1}}{B^r_{p-r, q+r-1}} \cong \frac{d(A^r_{p,q})}{d(A^{r-1}_{p-1,q+1} + A^{r+1}_{p,q})}.
+			\end{gather*}
+			In a similar way we obtain
+			\[
+				\frac{Z^r_{p,q}}{Z^{r+1}_{p,q}} \cong \frac{A^r_{p,q}}{A^{r+1}_{p,q} + A^{r-1}_{p-1,q+1}}
+			\]
+			so there is a natural map induced by $d^r_{p,q}\colon A^r_{p,q} \to d(A^r_{p,q})$ and it's an isomorphism because its kernel is contained in $A^{r+1}_{p,q}$.
+			Now we have that
+			\[
+				\ker d^r_{p,q} = \frac{\{z \in A^r_{p,q} : d(z) \in d(A^{r-1}_{p-1, q+1}) + A^{r-1}_{p-r-1, q+r}\}}{d(A^{r-1}_{p+r-1, q-r+2}) + A^{r-1}_{p-1,q+1}} = \frac{A^{r-1}_{p-1, q+1} + A^{r+1}_{p,q}}{d(A^{r-1}_{p+r-1, q-r+2}) + A^{r-1}_{p-1,q+1}} \cong \frac{Z^{r+1}_{p,q}}{B^r_{p,q}}
+			\]
+			where the last isomorphism derives from the fact that left and right member are both isomorphic to $A^{r+1}_{p,q}/d(A^{r-1}_{p+r-1, q-r+2}) + A^{r}_{p-1,q+1}$. In-fact we have
+			\begin{align*}
+				\ker d^r_{p,q} &= \frac{d(A^{r-1}_{p+r-1, q-r+2}) + A^{r-1}_{p-1, q+1} + A^{r+1}_{p,q}}{d(A^{r-1}_{p+r-1, q-r+2}) + A^{r-1}_{p-1,q+1}} \cong \frac{A^{r+1}_{p,q}}{d(A^{r-1}_{p+r-1, q-r+2}) + A^{r}_{p-1,q+1}} \\
+				\frac{Z^{r+1}_{p,q}}{B^r_{p,q}} &\cong \frac{A^{r+1}_{p,q} + d(A^{r-1}_{p+r-1,q-r+2}) + F_{p-1}C_{p+q}}{d(A^{r-1}_{p+r-1,q-r+2}) + F_{p-1}C_{p+q}} \cong \frac{A^{r+1}_{p,q}}{(d(A^{r-1}_{p+r-1,q-r+2}) + F_{p-1}C_{p+q}) \cap A^{r+1}_{p,q}} =\\
+				&=  \frac{A^{r+1}_{p,q}}{d(A^{r-1}_{p+r-1,q-r+2}) + A^r_{p-1,q+1}}
+			\end{align*}
+			The map $d^r_{p,q}$ factors as
+			\begin{center}
+				\begin{tikzcd}
+					E^r_{p,q} \stackrel{\textrm{def}}{=} \frac{Z^r_{p,q}}{B^r_{p,q}} \arrow[r, twoheadrightarrow] & \frac{Z^r_{p,q}}{Z^{r+1}_{p,q}} \arrow[r, "\sim", "d" below] & \frac{B^{r+1}_{p-r, q+r-1}}{B^r_{p-r, q+r-1}} \arrow[r, hookrightarrow] & \frac{Z^r_{p-r,q+r-1}}{B^r_{p-r,q+r-1}} \stackrel{\textrm{def}}{=} E^r_{p-r, q+r-1}
+				\end{tikzcd}
+			\end{center}
+			from which we see that $\Ima d^r_{p,q} = B^{r+1}_{p-r, q+r-1}/B^r_{p-r, q+r-1}$. This, finally, implies
+			\[
+				E^{r+1}_{p,q} = \frac{Z^{r+1}_{p,q}}{B^{r+1}_{p,q}} \cong \frac{\ker d^r_{p,q}}{\Ima d^r_{p+r, q-r+1}},
+			\]
+			which concludes the proof (quotient both by $B^r_{p,q}$).
+		\end{proof}
+		\begin{comment}
+			\begin{remark}
+			The spectral sequence constructed from $\cup F_pC$ is isomorphic to the one corresponding to $C$ so, from now on, we'll always assume filtrations on $C$ to be exhaustive.
+			\end{remark}
+		\end{comment}
+		Let $C$ be a filtered complex; then we have an induced filtration on homology: \[ F_pH_n(C) \coloneqq \Ima( H_n(F_pC) \to H_n(C)) .\]
+		If $F$ is exhaustive on $C$ then it is also exhaustive on $H$ (any element of $H_n(C)$ is represented by some $c \in F_pC_n$ s.t.\ $d(c) = 0$). If $F$ is bounded below on $C$ then it is bounded below also on $H$, since $F_pC = 0$ implies $F_pH_n(C) = 0$.
+		\begin{thm}[Classical convergence theorem]
+			\label{thm:classical-convergence}
+			Let $C$ be a filtered complex.
+			\begin{enumerate}
+				\item Suppose the filtration on $C$ is bounded. Then the spectral sequence is bounded and converges to $\Hs(C)$, that is \[E^0_{p,q} = F_pC_{p+q}/F_{p-1}C_{p+q} \Longrightarrow H_{p+q}(C).\]
+				\item Suppose the filtration on $C$ is bounded below and exhaustive. Then the spectral sequence is bounded below and converges to $\Hs(C)$. Moreover, if $f\colon C \to C'$ is a map of filtered complexes (i.e.\ it respects the filtrations) then the induced map $f_{\star}\colon \Hs(C) \to \Hs(C')$ is compatible with the corresponding map induced on the spectral sequences.
+			\end{enumerate}
+		\end{thm}
+		\begin{proof}
+			As already said above exhaustiveness and below-boundedness are inherited by the filtration on $\Hs(C)$. Then $\Hs(C)$ is Hausdorff, regular (both implied by bounded below) and complete (implied by bounded below and exhaustive) hence, recalling the definition \nameref{defn:convergence}, we just need to prove weak convergence. First of all, observe that, since the filtration on $C$ is bounded below, fixed $(p,q)$, we have that the $A^r_{p,q} = \{c \in F_pC_{p+q} : d(c) \in F_{p-r}C_{p+q-1}\}$ (see \nameref{thm:spectral-seq-filtration}) stabilize for a large enough $r_0$: we'll then define $A^{\infty}_{p,q} \coloneqq A^{r_0}_{p,q}$. Then we observe the following facts:
+			\begin{gather*}
+				Z^{\infty}_{p,q} = \eta_{p,q}(A^{\infty}_{p,q}), \qquad A^{\infty}_{p,q} = \ker(F_pC_{p+q} \stackrel{d}{\longrightarrow} F_pC_{p+q-1}).
+			\end{gather*}
+			Let's observe now that, since the filtration is exhaustive, we have
+			\[
+				d(C_{p+q}) \cap F_pC_{p+q-1} = \bigcup_r d(A^r_{p+r, q-r}) = d(\cup A^r_{p+r, q-r}) \subseteq A^{\infty}_{p,q}
+			\]
+			and that $A^{\infty}_{p-1,q+1} = \ker(A^{\infty}_{p,q} \xrightarrow{\eta_{p,q}} E^0_{p,q})$, since $A^{\infty}_{p-1,q+1} \subseteq F_{p-1}C_{p+q}$. We easily see that
+			\[
+				B^r_{p,q} \stackrel{\textrm{def}}{=} \eta_{p,q}(d(A^{r-1}_{p+r-1, q-r+2})) \implies B^{\infty}_{p,q} \stackrel{\textrm{def}}{=} \bigcup_r B^r_{p,q} = \eta_{p,q}(d(\cup A^r_{p+r, q-r+1})).
+			\]
+			Putting all together, recalling that $F_pH_{p+q}(C) = \Ima(H_{p+q}(F_pC) \to H_{p+q}(C))$, we have
+			\begin{align*}
+				\frac{F_pH_{p+q}(C)}{F_{p-1}H_{p+q}(C)} &= \frac{A^{\infty}_{p,q}/d(C_{p+q+1}) \cap A^{\infty}_{p,q}}{A^{\infty}_{p-1,q+1}/d(C_{p+q+1}) \cap A^{\infty}_{p-1,q+1}} = \frac{A^{\infty}_{p,q}/d(\cup A^r_{p+r, q-r+1}) \cap A^{\infty}_{p,q}}{A^{\infty}_{p-1,q+1}/d(\cup A^r_{p+r, q-r+1}) \cap A^{\infty}_{p-1,q+1}} \cong \\
+				&\cong \frac{A^{\infty}_{p,q}}{A^{\infty}_{p-1,q+1} + d(\cup A^r_{p+r, q-r+1})} \cong \frac{\eta_{p,q}(A^{\infty}_{p,q})}{\eta_{p,q}(d(\cup A^r_{p+r, q-r+1}))} = \frac{Z^{\infty}_{p,q}}{B^{\infty}_{p,q}} = E^{\infty}_{p,q}.
+			\end{align*}
+			which concludes the proof of convergence.
+		\end{proof}
+		\begin{example}[First quadrant spectral sequence]
+			\label{example:first-quadrant-convergence}
+			Suppose that the filtration of $C$ is canonically bounded, i.e.\ $F_{-1}C_n = 0$ and $F_nC_n = C_n$, so that the spectral sequence lies in the first quadrant. Then it converges to $\Hs(C)$.
+		\end{example}
+		We only cite a more powerful result,
+		\begin{thm}[Complete convergence theorem]
+			\label{thm:complete-convergence}
+			Suppose the filtration on $C$ is complete and exhaustive and the spectral sequence is regular. Then 
+			\begin{enumerate}
+				\item the spectral sequence weakly converges to $\Hs(C)$;
+				\item if the spectral sequence is bounded above then it converges to $\Hs(C)$.
+			\end{enumerate}
+		\end{thm}
+		\begin{proof}
+			See \cite[140]{weibel}.
+		\end{proof}
+	\section{Spectral sequence of a double complex}
+		One important application of spectral sequences is to compute the total homology of a double complex. Given a double complex $C \in \DC$ we have two filtrations for $\tot(C)$, hence two different spectral sequences. We'll then be able to play them off against each other to prove some properties (e.g.\ 5-lemma, snake lemma).
+		\begin{remark}
+			Let $C$ be a double complex; we'll denote by $H^h$ ($H^v$) the homology related to the horizontal (vertical) differentials. We'll use the generic notation $\tot(C)$ meaning that we can define/do the same things for both total complexes.
+		\end{remark}
+		\begin{defn}[Filtration by columns]
+			Let $C = C_{\bb}$ be a double complex and let $\Ii{F_n\tot(C)}$ be the total complex of
+			\begin{gather*}
+				\left(\Ii{F_nC}\right)_{p,q} \coloneqq 
+				\begin{cases}
+					C_{p,q} & \text{if $p \leq n$}\\
+					0 & \text{otherwise}
+				\end{cases}\qquad
+				\begin{tabular}{c c | c c}
+					* & * & 0 & 0 \\
+					* & * & 0 & 0 \\ 
+					* & * & 0 & 0 \\
+					* & * & 0 & 0 
+				\end{tabular}
+			\end{gather*}
+			We have defined a filtration of $\tot(C)$, called filtration by columns.
+		\end{defn}
+		It is easy to see that this filtration on $\tot(C)$ gives rise to a spectral sequence $\{\Ii{E^r_{p,q}}\}$ starting with $\Ii{E^0_{p,q}} = C_{p,q}$, where the maps $d^0$ are exactly the vertical differentials of $C$ so that $\Ii{E^1_{p,q}} = H^v_q(C_{p, \bullet})$. The maps $d^1\colon H^v_q(C_{p, \bullet}) \to H^v_q(C_{p-1, \bullet})$ are clearly the ones induced on the homology by the horizontal differentials of $C$.
+		
+		\begin{defn}[Filtration by rows]
+			Let $C = C_{\bb}$ be a double complex and let $\IIi{F_n\tot(C)}$ be the total complex of
+			\begin{gather*}
+				\left(\IIi{F_nC}\right)_{p,q} \coloneqq 
+				\begin{cases}
+					C_{p,q} & \text{if $q \leq n$}\\
+					0 & \text{otherwise}
+				\end{cases}\qquad
+				\begin{tabular}{c c c c c}
+					0 & 0 & 0 & 0 & 0\\
+					0 & 0 & 0 & 0 & 0\\ \hline
+					* & * & * & * & *\\
+					* & * & * & * & *
+				\end{tabular}
+			\end{gather*}
+			We have defined a filtration of $\tot(C)$, called filtration by rows.
+		\end{defn}
+		Since $\IIi{F_p\tot(C)}/\IIi{F_{p-1}\tot(C)}$ is the \emph{row} $C_{\bullet, p}$ we have that the corresponding spectral sequence $\{\IIi{E^r_{p,q}}\}$ starts with $\IIi{E^0_{p,q}} = C_{q,p}$ (vertical morphisms $d^0$ of $E^0$ are exactly the horizontal morphisms of $C$) and $\IIi{E^1_{p,q}} = H^h_q(C_{\bullet, p})$ and, as one imagines, the differentials $d^1$ are induced by the vertical differentials of $C$.
+		Let's now study the convergence of these sequences in some special cases.
+		\begin{description}
+			\item[First quadrant] Let $C$ be a first quadrant double complex then both the filtration of $\tot(C)$ (here we have only one kind of total complex) are canonically bounded and so, by the \nameref{thm:classical-convergence}, both the spectral sequences converge to $\Hs(\tot(C))$:
+			\[
+				\Ii{E^0_{p,q}}, \IIi{E^0_{p,q}} \Longrightarrow H_{p+q}(\tot(C)).
+			\]
+			\item[Zeroes in second quadrant] Let $C$ be such that $C_{p,q} = 0$ in the second quadrant (e.g.\ a fourth quadrant complex). 
+			\begin{itemize} 
+				\item \textbf{Columns} The filtration on $\tot^{\prod}(C)$ by columns is bounded below but is not exhaustive (so we cannot apply our convergence theorems), in-fact we have
+				\[
+					\bigcup_{p \geq p_0} \prod_{i=p_0}^p C_{i, p_0-i} \subsetneq \prod_{i=p_0}^{\infty} C_{i, p_0-i}
+				\]
+				since the lhs contains only the ``definitively zero terms''. Instead, the column filtration on $\tot^{\oplus}(C)$ is both bounded below and exhaustive so we can apply the \nameref{thm:classical-convergence} to obtain
+				\[
+					\Ii{E^0_{p,q}} \Longrightarrow H_{p+q}(\tot^{\oplus}(C))
+				\]
+				(hence here we must be careful because the two different total complexes are different and we have convergence only with $\tot^{\oplus}(C)$).
+				\item \textbf{Rows} The filtration on $\tot^{\prod}(C)$ by rows is bounded above (hence exhaustive) and complete so we can apply \nameref{thm:complete-convergence} to obtain that $\IIi{E^0_{p,q}}$ weakly converges to $\Hs(\tot^{\prod}(C))$. (We cannot say anything on $\tot^{\oplus}(C)$ since its filtration by rows here it is not complete).
+			\end{itemize}
+			\item[Zeroes in fourth quadrant] Let $C$ be such that $C_{p,q} = 0$ in the fourth quadrant (e.g.\ a second quadrant complex).
+			\begin{itemize}
+				\item \textbf{Columns} The column filtration of $\tot^{\prod}(C)$ is bounded above, hence exhaustive, and complete so we can apply \nameref{thm:complete-convergence} to obtain that $\Ii{E^0_{p,q}}$ weakly converges to $\Hs(\tot^{\prod}(C))$.(We cannot say anything on $\tot^{\oplus}(C)$ since its filtration by columns here it is not complete).
+				\item \textbf{Rows} The row filtration of $\tot^{\prod}(C)$ is not exhaustive so we cannot apply the convergence theorems. Instead, the filtration on $\tot^{\oplus}(C)$ is bounded below and exhaustive hence, by the \nameref{thm:classical-convergence}, we obtain
+				\[
+					\IIi{E^0_{p,q}} \Longrightarrow H_{p+q}(\tot^{\oplus}(C)).
+				\]
+			\end{itemize}
+		\end{description}
+	\section{Snakes!}
+		Finally, we prove the famous snake lemma using the whole machinery of spectral sequences, inspired by \cite{friendorfoe}.
+		\begin{prop}[Snake Lemma]
+			\label{prop:snake-lemma}
+			Consider the following commutative diagram, whose rows are exact
+			\begin{comment} % without snake
+				\begin{center}
+				\begin{tikzcd}
+				& 0 \arrow[d] & 0 \arrow[d] & 0 \arrow[d] & \\
+				& \ker \gamma \arrow[d] & \ker \beta \arrow[d] \arrow[l, dashed] & \ker \alpha \arrow[d] \arrow[l, dashed] & \\
+				0 & C \arrow[l] \arrow[d, "\gamma"] & B \arrow[l] \arrow[d, "\beta"] & A \arrow[d, "\alpha"] \arrow[l] \\
+				& F \arrow[d] & E \arrow[l] \arrow[d] & D \arrow[l] \arrow[d] & 0 \arrow[l] \\
+				& \coker \gamma \arrow[d] & \coker \beta  \arrow[l, dashed] \arrow[d] & \coker \alpha \arrow[l, dashed] \arrow[d] & \\
+				& 0 & 0  & 0  & \\
+				\end{tikzcd}
+				\end{center}
+			\end{comment}
+			\begin{center}
+				\begin{tikzcd}[column sep = large]
+					  & 0 \arrow[d] & 0 \arrow[d] & 0 \arrow[d] & & \\
+					  & \ker \gamma \arrow[d] 
+					  & \ker \beta \arrow[d] \arrow[l, dashed] & \ker \alpha \arrow[d] \arrow[l, dashed] & & \\
+					0 & C \arrow[l] \arrow[dd, "\gamma" near end]  & B \arrow[l] \arrow[dd, "\beta" near end]  & A \arrow[dd, "\alpha" near end] \arrow[l] & \\
+					& &  &  \arrow[r, phantom, ""{coordinate, name=Zb}]  &~ &\\
+					  & F \arrow[d] & E \arrow[l] \arrow[d] & D \arrow[l] \arrow[d] & 0 \arrow[l] \arrow[d, phantom, ""{coordinate, name=Z0}] &    \\
+					  & \coker \gamma \arrow[d] & \coker \beta  \arrow[l, dashed] \arrow[d] & \coker \alpha \arrow[l, dashed] \arrow[d] \arrow[from=uuuull,red, "\delta", rounded corners, crossing over,
+					  to path={
+					  	-- ([xshift=-2ex]\tikztostart.west)
+					  	|- (Zb) [near end]\tikztonodes
+					  	|- ([xshift=1ex]\tikztotarget.east)
+					  	-- (\tikztotarget)} ]  &~ &\\
+					  & 0 & 0  & 0  &~ &\\				\end{tikzcd}
+			\end{center}
+			then there exists a morphism $\delta$ such that we have this exact sequence 
+			\begin{center}
+				\begin{tikzcd}
+					\ker\alpha \arrow[r] & \ker\beta \arrow[r] & \ker\gamma \arrow[r, "\delta", red] & \coker\alpha \arrow[r] & \coker\beta \arrow[r] & \coker\gamma.
+				\end{tikzcd}
+			\end{center}
+		\end{prop}
+		\begin{proof}
+			Consider the double complex (fill with zeroes)
+			\begin{center}
+				\begin{tikzcd}
+				0 & C \arrow[l] \arrow[d, "\gamma"] & B \arrow[l] \arrow[d, "\beta"] & A \arrow[d, "\alpha"] \arrow[l] \\
+				& F & E \arrow[l] & D \arrow[l] & 0 \arrow[l] 
+				\end{tikzcd}
+			\end{center}
+			where rows and columns are numbered such that $F$ is the origin and $C$ is $(0,1)$. This is a first quadrant complex hence both filtrations converge to the total homology, call it $H_{\star}$. A little computation shows that $\IIi{E^1}$ (row filtration) is of this form
+			\begin{center}
+				\begin{tikzcd}
+					0 & \arrow[l] *\\
+					0 & \arrow[l] 0\\
+					* & \arrow[l] 0
+				\end{tikzcd}
+			\end{center}
+			where the bottom left square is the origin. Hence we see that, having only two non-zero terms in different degrees, $\IIi{E^{\infty}} = \IIi{E^1}$ and we can already read that $H_1 = H_2 = 0$. We'll use this information with the spectral sequence corresponding to the column filtration. The first page is
+			\begin{center}
+				\begin{tikzcd}
+					\ker\gamma & \ker\beta \arrow[l, dashed] & \ker\alpha \arrow[l, dashed] \\
+					\coker\gamma & \coker\beta \arrow[l,dashed] & \coker\alpha \arrow[l,dashed]
+				\end{tikzcd}
+			\end{center}
+			and the second page is
+			\begin{center}
+				\begin{tikzcd}[column sep = large, row sep = large]
+					 \bullet_1 & \circ_1 & *  \\
+					 O & \circ_2 & \bullet_2 \arrow[ull]  
+				\end{tikzcd}
+			\end{center}
+			where $O$ is the origin and all the other non-written points are zero. Then we immediately see that, since $H_1 = H_2 = 0$ and the $\circ$'s are already stable, they must vanish. We also must have that the arrow between the $\bullet$'s is an iso, because at the next page its homologies must vanish. Let's translate all these information:
+			\begin{enumerate}[label=(\roman*)]
+				\item $\circ_2 = 0$ means exactness at $\coker\beta$;
+				\item $\circ_1 = 0$ means exactness at $\ker\beta$;
+				\item the isomorphism between the $\bullet$'s is an iso
+				\[
+					\delta\colon \bullet_1 =   \coker(\ker\beta \to \ker\gamma)  \xrightarrow{\sim} \ker(\coker\alpha \to \coker\beta) = \bullet_2
+				\]
+				and so we can glue the two natural exact sequences by this iso to get the wanted exact sequence. \qedhere
+			\end{enumerate}
+		\end{proof}
+	\pagebreak
+	\printbibliography
+\end{document}
